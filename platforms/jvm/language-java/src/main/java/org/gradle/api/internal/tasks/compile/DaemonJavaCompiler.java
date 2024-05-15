@@ -18,6 +18,9 @@ package org.gradle.api.internal.tasks.compile;
 import org.gradle.api.internal.ClassPathRegistry;
 import org.gradle.api.internal.tasks.compile.daemon.AbstractDaemonCompiler;
 import org.gradle.api.internal.tasks.compile.daemon.CompilerWorkerExecutor;
+import org.gradle.api.problems.Severity;
+import org.gradle.api.problems.internal.GradleCoreProblemGroup;
+import org.gradle.api.problems.internal.InternalProblems;
 import org.gradle.internal.classloader.VisitableURLClassLoader;
 import org.gradle.internal.classpath.ClassPath;
 import org.gradle.internal.jvm.JavaInfo;
@@ -40,14 +43,23 @@ public class DaemonJavaCompiler extends AbstractDaemonCompiler<JavaCompileSpec> 
     private final JavaForkOptionsFactory forkOptionsFactory;
     private final File daemonWorkingDir;
     private final ClassPathRegistry classPathRegistry;
+    private final InternalProblems problems;
 
-    public DaemonJavaCompiler(File daemonWorkingDir, Class<? extends Compiler<JavaCompileSpec>> compilerClass, Object[] compilerConstructorArguments, CompilerWorkerExecutor compilerWorkerExecutor, JavaForkOptionsFactory forkOptionsFactory, ClassPathRegistry classPathRegistry) {
+    public DaemonJavaCompiler(
+        File daemonWorkingDir,
+        Class<? extends Compiler<JavaCompileSpec>> compilerClass,
+        Object[] compilerConstructorArguments, CompilerWorkerExecutor compilerWorkerExecutor,
+        JavaForkOptionsFactory forkOptionsFactory,
+        ClassPathRegistry classPathRegistry,
+        InternalProblems problems
+    ) {
         super(compilerWorkerExecutor);
         this.compilerClass = compilerClass;
         this.compilerConstructorArguments = compilerConstructorArguments;
         this.forkOptionsFactory = forkOptionsFactory;
         this.daemonWorkingDir = daemonWorkingDir;
         this.classPathRegistry = classPathRegistry;
+        this.problems = problems;
     }
 
     @Override
@@ -82,7 +94,15 @@ public class DaemonJavaCompiler extends AbstractDaemonCompiler<JavaCompileSpec> 
             // In JDK 8 and below, the compiler internal classes are in tools.jar.
             File toolsJar = jvm.getToolsJar();
             if (toolsJar == null) {
-                throw new IllegalStateException("Could not find tools.jar in " + jvm.getJavaHome());
+                String contextualMessage = String.format("The 'tools.jar' cannot be found in the JDK located at '%s'.", jvm.getJavaHome());
+                throw problems.getInternalReporter().throwing(problemSpec -> problemSpec
+                    .id("missing-tools-jar", "Missing tools.jar", GradleCoreProblemGroup.compilation().groovy())
+                    .contextualLabel(contextualMessage)
+                    .solution("Check if the installation is a JDK and not a JRE.")
+                    .solution("Check if the JDK is corrupted or incomplete. The 'lib' directory should contain a 'tools.jar'.")
+                    .severity(Severity.ERROR)
+                    .withException(new IllegalStateException(contextualMessage))
+                );
             }
 
             compilerClasspath = compilerClasspath.plus(
