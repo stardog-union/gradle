@@ -66,7 +66,7 @@ dependencies {
     implementation(project(":enterprise-operations"))
     implementation(project(":functional"))
     implementation(projects.io)
-    implementation(project(":problems-api"))
+    implementation(projects.problems)
 
     implementation(libs.groovy) // for 'ReleaseInfo.getVersion()'
     implementation(libs.slf4jApi)
@@ -76,7 +76,6 @@ dependencies {
 
     runtimeOnly(project(":bootstrap"))
     runtimeOnly(project(":declarative-dsl-provider"))
-    runtimeOnly(project(":problems"))
 
     runtimeOnly(libs.commonsIo)
     runtimeOnly(libs.commonsLang)
