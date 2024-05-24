@@ -78,6 +78,7 @@ import org.gradle.launcher.exec.RunAsWorkerThreadBuildActionExecutor;
 import org.gradle.problems.buildtree.ProblemDiagnosticsFactory;
 import org.gradle.problems.buildtree.ProblemReporter;
 import org.gradle.problems.buildtree.ProblemStream;
+import org.gradle.problems.internal.rendering.ProblemRenderingBuildActionExecutor;
 import org.gradle.tooling.internal.provider.continuous.ContinuousBuildActionExecutor;
 
 import java.util.List;
@@ -221,11 +222,14 @@ public class LauncherServices extends AbstractGradleModuleServices {
                                 new BuildOutcomeReportingBuildActionRunner(
                                     styledTextOutputFactory,
                                     listenerManager,
-                                    new ProblemReportingBuildActionRunner(
-                                        new ChainingBuildActionRunner(buildActionRunners),
-                                        exceptionAnalyser,
-                                        buildLayout,
-                                        problemReporters
+                                    new ProblemRenderingBuildActionExecutor(
+                                        listenerManager,
+                                        new ProblemReportingBuildActionRunner(
+                                            new ChainingBuildActionRunner(buildActionRunners),
+                                            exceptionAnalyser,
+                                            buildLayout,
+                                            problemReporters
+                                        )
                                     ),
                                     buildStartedTime,
                                     buildRequestMetaData,
