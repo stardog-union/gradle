@@ -80,35 +80,29 @@ public class DiagnosticToProblemListener implements DiagnosticListener<JavaFileO
 
     @VisibleForTesting
     void buildProblem(Diagnostic<? extends JavaFileObject> diagnostic, ProblemSpec spec) {
-        if (diagnostic instanceof JCDiagnostic) {
-            JCDiagnostic jcDiagnostic = (JCDiagnostic) diagnostic;
-            String kebabCode = jcDiagnostic.getCode().replace('.', '-');
-            String message = jcDiagnostic.getMessage(null);
-            spec.id(kebabCode, message, GradleCoreProblemGroup.compilation().java());
-        } else {
-            // Fallback mechanism, though this should never happen in practice,
-            // as we expect an OpenJDK-based compiler, which only produces JCDiagnostics
-            spec.id(mapKindToId(diagnostic.getKind()), mapKindToLabel(diagnostic.getKind()), GradleCoreProblemGroup.compilation().java());
-        }
-
-
         spec.severity(mapKindToSeverity(diagnostic.getKind()));
+        addId(spec, diagnostic);
+        addContextualLabel(spec, diagnostic);
         addFormattedMessage(spec, diagnostic);
-        addDetails(spec, diagnostic);
         addLocations(spec, diagnostic);
+    }
+
+    private static void addId(ProblemSpec spec, Diagnostic<? extends JavaFileObject> diagnostic) {
+        String kebabCode = diagnostic.getCode().replace('.', '-');
+        spec.id(kebabCode, mapKindToLabel(diagnostic.getKind()), GradleCoreProblemGroup.compilation().java());
+    }
+
+    private void addContextualLabel(ProblemSpec spec, Diagnostic<? extends JavaFileObject> diagnostic) {
+        String message = diagnostic.getMessage(Locale.getDefault());
+        if (message != null) {
+            spec.contextualLabel(message);
+        }
     }
 
     private void addFormattedMessage(ProblemSpec spec, Diagnostic<? extends JavaFileObject> diagnostic) {
         String formatted = messageFormatter.apply(diagnostic);
         System.err.println(formatted);
         ((InternalProblemSpec) spec).additionalData(GeneralDataSpec.class, data -> data.put("formatted", formatted)); // TODO (donat) Introduce custom additional data type for compilation problems
-    }
-
-    private static void addDetails(ProblemSpec spec, Diagnostic<? extends JavaFileObject> diagnostic) {
-        String diagnosticMessage = diagnostic.getMessage(Locale.getDefault());
-        if (diagnosticMessage != null) {
-            spec.details(diagnosticMessage);
-        }
     }
 
     private static void addLocations(ProblemSpec spec, Diagnostic<? extends JavaFileObject> diagnostic) {
@@ -199,7 +193,7 @@ public class DiagnosticToProblemListener implements DiagnosticListener<JavaFileO
             case OTHER:
                 return "Java compilation problem";
             default:
-                return "Unknown java compilation problem";
+                return "Unknown Java compilation problem";
         }
     }
 
