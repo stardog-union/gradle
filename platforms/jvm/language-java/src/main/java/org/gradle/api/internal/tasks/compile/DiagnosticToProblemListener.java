@@ -80,7 +80,18 @@ public class DiagnosticToProblemListener implements DiagnosticListener<JavaFileO
 
     @VisibleForTesting
     void buildProblem(Diagnostic<? extends JavaFileObject> diagnostic, ProblemSpec spec) {
-        spec.id(mapKindToId(diagnostic.getKind()), mapKindToLabel(diagnostic.getKind()), GradleCoreProblemGroup.compilation().java());
+        if (diagnostic instanceof JCDiagnostic) {
+            JCDiagnostic jcDiagnostic = (JCDiagnostic) diagnostic;
+            String kebabCode = jcDiagnostic.getCode().replace('.', '-');
+            String message = jcDiagnostic.getMessage(null);
+            spec.id(kebabCode, message, GradleCoreProblemGroup.compilation().java());
+        } else {
+            // Fallback mechanism, though this should never happen in practice,
+            // as we expect an OpenJDK-based compiler, which only produces JCDiagnostics
+            spec.id(mapKindToId(diagnostic.getKind()), mapKindToLabel(diagnostic.getKind()), GradleCoreProblemGroup.compilation().java());
+        }
+
+
         spec.severity(mapKindToSeverity(diagnostic.getKind()));
         addFormattedMessage(spec, diagnostic);
         addDetails(spec, diagnostic);
@@ -163,16 +174,16 @@ public class DiagnosticToProblemListener implements DiagnosticListener<JavaFileO
     private static String mapKindToId(Diagnostic.Kind kind) {
         switch (kind) {
             case ERROR:
-                return "java-compilation-error";
+                return "compilation-error";
             case WARNING:
             case MANDATORY_WARNING:
-                return "java-compilation-warning";
+                return "compilation-warning";
             case NOTE:
-                return "java-compilation-note";
+                return "compilation-note";
             case OTHER:
-                return "java-compilation-problem";
+                return "compilation-problem";
             default:
-                return "unknown-java-compilation-problem";
+                return "unknown-kind";
         }
     }
 
