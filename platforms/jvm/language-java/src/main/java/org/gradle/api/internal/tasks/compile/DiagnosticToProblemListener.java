@@ -244,22 +244,6 @@ public class DiagnosticToProblemListener implements DiagnosticListener<JavaFileO
         return fileObject.getName();
     }
 
-    private static String mapKindToId(Diagnostic.Kind kind) {
-        switch (kind) {
-            case ERROR:
-                return "compilation-error";
-            case WARNING:
-            case MANDATORY_WARNING:
-                return "compilation-warning";
-            case NOTE:
-                return "compilation-note";
-            case OTHER:
-                return "compilation-problem";
-            default:
-                return "unknown-kind";
-        }
-    }
-
     private static String mapKindToDisplayName(Diagnostic.Kind kind) {
         switch (kind) {
             case ERROR:
