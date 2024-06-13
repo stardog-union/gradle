@@ -167,8 +167,8 @@ public class DiagnosticToProblemListener implements DiagnosticListener<JavaFileO
     }
 
     private static void addId(ProblemSpec spec, Diagnostic<? extends JavaFileObject> diagnostic) {
-        String kebabCode = diagnostic.getCode().replace('.', '-');
-        spec.id(kebabCode, mapKindToLabel(diagnostic.getKind()), GradleCoreProblemGroup.compilation().java());
+        String idName = diagnostic.getCode().replace('.', '-');
+        spec.id(idName, mapKindToLabel(diagnostic.getKind()), GradleCoreProblemGroup.compilation().java());
     }
 
     private void addContextualLabel(ProblemSpec spec, Diagnostic<? extends JavaFileObject> diagnostic) {
