@@ -16,7 +16,6 @@
 
 package org.gradle.api.tasks.compile
 
-
 import org.gradle.api.JavaVersion
 import org.gradle.api.internal.tasks.compile.DiagnosticToProblemListener
 import org.gradle.api.problems.Severity
@@ -425,9 +424,10 @@ ${fooFileLocation}:9: warning: [cast] redundant cast to $expectedType
         then:
         outputContains(DiagnosticToProblemListener.FORMATTER_FALLBACK_MESSAGE)
         verifyAll(receivedProblem(0)) {
-            assertProblem(it, "WARNING", true)
-            fqid == 'compilation:java:java-compilation-warning'
-            details == 'redundant cast to java.lang.String'
+            assertLocations(it, true)
+            severity == Severity.WARNING
+            fqid == 'compilation:java:compiler-warn-redundant-cast'
+            contextualLabel == 'redundant cast to java.lang.String'
             // In JDK8, the compiler will not simplify the type to just "String"
             additionalData.asMap["formatted"].contains("redundant cast to java.lang.String")
         }
