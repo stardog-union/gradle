@@ -168,7 +168,7 @@ public class DiagnosticToProblemListener implements DiagnosticListener<JavaFileO
 
     private static void addId(ProblemSpec spec, Diagnostic<? extends JavaFileObject> diagnostic) {
         String idName = diagnostic.getCode().replace('.', '-');
-        spec.id(idName, mapKindToLabel(diagnostic.getKind()), GradleCoreProblemGroup.compilation().java());
+        spec.id(idName, mapKindToDisplayName(diagnostic.getKind()), GradleCoreProblemGroup.compilation().java());
     }
 
     private void addContextualLabel(ProblemSpec spec, Diagnostic<? extends JavaFileObject> diagnostic) {
@@ -260,7 +260,7 @@ public class DiagnosticToProblemListener implements DiagnosticListener<JavaFileO
         }
     }
 
-    private static String mapKindToLabel(Diagnostic.Kind kind) {
+    private static String mapKindToDisplayName(Diagnostic.Kind kind) {
         switch (kind) {
             case ERROR:
                 return "Java compilation error";
