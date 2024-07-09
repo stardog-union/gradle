@@ -55,6 +55,16 @@ When this happens, configurations in the substituted project could be selected t
 
 Consuming non-consumable configurations in this manner is deprecated and will result in an error in Gradle 9.0.
 
+[[extending_configurations_in_same_project]]
+==== Deprecated extending configurations in the same project
+
+In prior versions of Gradle, it was possible to extend a configuration in different project.
+
+Projects should not have knowledge of configurations in other projects.
+This practice is discouraged because it can lead to unexpected behavior when configurations are extended in a way that is not intended by the configuration's owner.
+
+Extending configurations in different projects is deprecated and will result in an error in Gradle 9.0.
+
 [[changes_8.9]]
 == Upgrading from 8.8 and earlier
 
@@ -160,7 +170,7 @@ plugins {
 }
 
 configurations.runtimeClasspath {
-    // `beforeResolve` is not called before the configuration is partially resolved for 
+    // `beforeResolve` is not called before the configuration is partially resolved for
     // build dependencies, but only before a full graph resolution.
     // Configurations should not be mutated in this hook
     incoming.beforeResolve {
