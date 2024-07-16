@@ -219,6 +219,7 @@ public interface Configuration extends FileCollection, HasConfigurableAttributes
      *
      * @return The files of this configuration.
      */
+    // TODO: Deprecate
     Set<File> resolve();
 
     /**
@@ -685,6 +686,7 @@ public interface Configuration extends FileCollection, HasConfigurableAttributes
      * @since 8.2
      */
     @Incubating
+    // Deincubate
     void setCanBeDeclared(boolean allowed);
 
     /**
