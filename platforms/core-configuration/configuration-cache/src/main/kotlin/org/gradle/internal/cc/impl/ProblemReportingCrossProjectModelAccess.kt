@@ -53,6 +53,7 @@ import org.gradle.api.internal.plugins.ExtensionContainerInternal
 import org.gradle.api.internal.plugins.PluginManagerInternal
 import org.gradle.api.internal.project.CrossProjectModelAccess
 import org.gradle.api.internal.project.ProjectIdentifier
+import org.gradle.api.internal.project.ProjectIdentity
 import org.gradle.api.internal.project.ProjectInternal
 import org.gradle.api.internal.project.ProjectState
 import org.gradle.api.internal.project.ProjectStateInternal
@@ -1038,8 +1039,8 @@ class ProblemReportingCrossProjectModelAccess(
             return delegate.projectPath
         }
 
-        override fun getProjectIdentityPath(): Path? {
-            return delegate.projectIdentityPath
+        override fun getProjectIdentity(): ProjectIdentity {
+            return delegate.projectIdentity
         }
 
         override fun getIdentityPath(): Path {
