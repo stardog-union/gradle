@@ -69,6 +69,7 @@ import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import org.gradle.api.provider.ProviderFactory
 import org.gradle.api.resources.ResourceHandler
+import org.gradle.api.smalltalk.SmalltalkBuildModelLookup
 import org.gradle.api.tasks.WorkResult
 import org.gradle.configuration.ConfigurationTargetIdentifier
 import org.gradle.configuration.project.ProjectConfigurationActionContainer
@@ -348,6 +349,10 @@ class ProblemReportingCrossProjectModelAccess(
 
         override fun getIsolated(): IsolatedProject {
             return delegate.isolated
+        }
+
+        override fun getBuildModels(): SmalltalkBuildModelLookup {
+            return delegate.buildModels
         }
 
         override fun task(name: String): Task {
