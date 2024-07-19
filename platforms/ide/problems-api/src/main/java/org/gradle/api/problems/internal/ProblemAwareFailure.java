@@ -16,6 +16,7 @@
 
 package org.gradle.api.problems.internal;
 
+import org.gradle.api.Incubating;
 import org.gradle.api.NonNullApi;
 
 import java.util.Collection;
