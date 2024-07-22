@@ -16,6 +16,7 @@
 
 package org.gradle.internal.cc.impl.fingerprint
 
+import org.gradle.api.internal.artifacts.configurations.ProjectComponentObservationListener
 import org.gradle.api.internal.file.FileCollectionFactory
 import org.gradle.api.internal.file.FileCollectionInternal
 import org.gradle.api.internal.file.collections.DirectoryFileTreeFactory
@@ -57,6 +58,7 @@ import org.gradle.internal.scripts.ProjectScopedScriptResolution
 import org.gradle.internal.scripts.ScriptFileResolverListeners
 import org.gradle.internal.serialize.graph.CloseableWriteContext
 import org.gradle.internal.serialize.graph.ReadContext
+import org.gradle.internal.service.scopes.ParallelListener
 import org.gradle.internal.service.scopes.Scope
 import org.gradle.internal.service.scopes.ServiceScope
 import org.gradle.internal.vfs.FileSystemAccess
@@ -168,6 +170,7 @@ class ConfigurationCacheFingerprintController internal constructor(
                 inputTrackingState
             )
             addListener(fingerprintWriter)
+            listenerManager.addListener(ProjectObservationListener(fingerprintWriter))
             return Writing(fingerprintWriter, buildScopedSpoolFile, projectScopedSpoolFile)
         }
 
@@ -344,6 +347,17 @@ class ConfigurationCacheFingerprintController internal constructor(
         scriptFileResolverListeners.removeListener(listener)
         workInputListeners.removeListener(listener)
         listenerManager.removeListener(listener)
+    }
+
+    @ParallelListener
+    class ProjectObservationListener(
+        private val fingerprintWriter: ConfigurationCacheFingerprintWriter
+    ) : ProjectComponentObservationListener {
+        override fun projectObserved(consumingProjectPath: Path?, targetProjectPath: Path) {
+            if (consumingProjectPath != null) {
+                fingerprintWriter.onProjectDependency(consumingProjectPath, targetProjectPath)
+            }
+        }
     }
 
     private
