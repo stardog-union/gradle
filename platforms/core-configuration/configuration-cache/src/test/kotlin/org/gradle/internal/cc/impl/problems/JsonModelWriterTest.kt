@@ -17,7 +17,7 @@
 package org.gradle.internal.cc.impl.problems
 
 import groovy.json.JsonSlurper
-import org.gradle.internal.configuration.problems.DecoratedPropertyProblem
+import org.gradle.internal.configuration.problems.DecoratedReportProblem
 import org.gradle.internal.configuration.problems.PropertyTrace
 import org.gradle.internal.configuration.problems.StructuredMessage
 import org.gradle.internal.extensions.stdlib.uncheckedCast
@@ -36,16 +36,27 @@ class JsonModelWriterTest {
                 beginModel()
                 writeDiagnostic(
                     DiagnosticKind.INPUT,
-                    DecoratedPropertyProblem(
+                    DecoratedReportProblem(
                         PropertyTrace.Unknown,
                         StructuredMessage.build { reference("") }
                     )
                 )
-                endModel(ConfigurationCacheReportDetails("", "", StructuredMessage.forText(""), "", 0))
+                writeDiagnostic(
+                    DiagnosticKind.INPUT,
+                    DecoratedReportProblem(
+                        PropertyTrace.Unknown,
+                        StructuredMessage.build { reference("") }
+                    )
+                )
+                endModel(ProblemReportDetails("", "", StructuredMessage.forText(""), "", 0))
             },
             hasEntry(
                 "diagnostics",
                 listOf(
+                    mapOf(
+                        "trace" to listOf(mapOf("kind" to "Unknown")),
+                        "input" to listOf(mapOf("name" to ""))
+                    ),
                     mapOf(
                         "trace" to listOf(mapOf("kind" to "Unknown")),
                         "input" to listOf(mapOf("name" to ""))
@@ -59,7 +70,7 @@ class JsonModelWriterTest {
     fun jsonModelFor(builder: JsonModelWriter.() -> Unit): Map<String, Any> =
         JsonSlurper().parseText(
             StringWriter().also {
-                JsonModelWriter(it).apply(builder)
+                JsonModelWriter(JsonWriter(it)).apply(builder)
             }.toString()
         ).uncheckedCast()
 }

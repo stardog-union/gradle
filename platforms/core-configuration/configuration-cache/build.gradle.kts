@@ -6,25 +6,6 @@ plugins {
 
 description = "Configuration cache implementation"
 
-val configurationCacheReportPath by configurations.creating {
-    isVisible = false
-    isCanBeConsumed = false
-    attributes { attribute(DocsType.DOCS_TYPE_ATTRIBUTE, objects.named("configuration-cache-report")) }
-}
-
-// You can have a faster feedback loop by running `configuration-cache-report` as an included build
-// See https://github.com/gradle/configuration-cache-report#development-with-gradlegradle-and-composite-build
-dependencies {
-    configurationCacheReportPath(libs.configurationCacheReport)
-}
-
-tasks.processResources {
-    from(zipTree(configurationCacheReportPath.elements.map { it.first().asFile })) {
-        into("org/gradle/internal/cc/impl/problems")
-        exclude("META-INF/**")
-    }
-}
-
 // The integration tests in this project do not need to run in 'config cache' mode.
 tasks.configCacheIntegTest {
     enabled = false
@@ -42,7 +23,6 @@ dependencies {
     api(projects.fileTemp)
     api(projects.loggingApi)
     api(projects.messaging)
-    api(projects.modelCore)
     api(projects.native)
     api(projects.pluginUse)
     api(projects.resources)
@@ -61,6 +41,7 @@ dependencies {
     implementation(projects.coreKotlinExtensions)
     implementation(projects.coreSerializationCodecs)
     implementation(projects.dependencyManagementSerializationCodecs)
+    implementation(projects.encryptionServices)
     implementation(projects.enterpriseOperations)
     implementation(projects.execution)
     implementation(projects.fileCollections)
@@ -74,6 +55,7 @@ dependencies {
     implementation(projects.inputTracking)
     implementation(projects.instrumentationAgentServices)
     implementation(projects.logging)
+    implementation(projects.modelCore)
     implementation(projects.persistentCache)
     implementation(projects.problemsApi)
     implementation(projects.processServices)
@@ -83,7 +65,6 @@ dependencies {
     implementation(projects.toolingApi)
 
     implementation(libs.fastutil)
-    implementation(libs.groovyJson)
     implementation(libs.guava)
     implementation(libs.slf4jApi)
 
