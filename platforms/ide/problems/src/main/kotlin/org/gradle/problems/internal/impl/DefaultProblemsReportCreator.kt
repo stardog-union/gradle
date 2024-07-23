@@ -65,12 +65,17 @@ class DefaultProblemsReportCreator(
         report.writeReportFileTo(reportDir, object : JsonSource {
             override fun writeToJson(jsonWriter: JsonWriter) {
                 with(jsonWriter) {
-                    property("reportContext", "problem report")
-                    property("totalProblemCount", problemCount.toString())
-                    buildNameProvider.buildName()?.let { property("buildName", it) }
-                    property("requestedTasks", taskNames.joinToString(" "))
-                    property("documentationLink", DocumentationRegistry().getDocumentationFor("problem-report"))
-                    property("documentationLinkCaption", "Problem report")
+                    property("problemsReport") {
+                        jsonObject {
+                            property("totalProblemCount") {
+                                write(problemCount.toString())
+                            }
+                            buildNameProvider.buildName()?.let { property("buildName", it) }
+                            property("requestedTasks", taskNames.joinToString(" "))
+                            property("documentationLink", DocumentationRegistry().getDocumentationFor("problem-report"))
+                            property("documentationLinkCaption", "Problem report")
+                        }
+                    }
                 }
             }
         })?.let {
