@@ -103,10 +103,11 @@ import org.gradle.internal.model.ModelContainer;
 import org.gradle.internal.model.RuleBasedPluginListener;
 import org.gradle.internal.reflect.Instantiator;
 import org.gradle.internal.resource.TextUriResourceLoader;
-import org.gradle.internal.service.DefaultServiceRegistry;
+import org.gradle.internal.service.CloseableServiceRegistry;
 import org.gradle.internal.service.Provides;
 import org.gradle.internal.service.ServiceRegistrationProvider;
 import org.gradle.internal.service.ServiceRegistry;
+import org.gradle.internal.service.ServiceRegistryBuilder;
 import org.gradle.internal.service.scopes.ServiceRegistryFactory;
 import org.gradle.internal.typeconversion.TypeConverter;
 import org.gradle.listener.ClosureBackedMethodInvocationDispatch;
@@ -607,6 +608,12 @@ public abstract class DefaultProject extends AbstractPluginAware implements Proj
         return owner.getProjectPath();
     }
 
+    @Nullable
+    @Override
+    public Path getProjectIdentityPath() {
+        return getIdentityPath();
+    }
+
     @Override
     public ModelContainer<ProjectInternal> getModel() {
         return getOwner();
@@ -689,7 +696,7 @@ public abstract class DefaultProject extends AbstractPluginAware implements Proj
 
     @Override
     public void allprojects(ProjectInternal referrer, Action<? super Project> action) {
-        getProjectConfigurator().allprojects(getCrossProjectModelAccess().getAllprojects(referrer, this), action);
+        getProjectConfigurator().allprojects(getAllprojects(referrer), action);
     }
 
     @Override
@@ -714,7 +721,7 @@ public abstract class DefaultProject extends AbstractPluginAware implements Proj
 
     @Override
     public void subprojects(ProjectInternal referrer, Action<? super Project> configureAction) {
-        getProjectConfigurator().subprojects(getCrossProjectModelAccess().getSubprojects(referrer, this), configureAction);
+        getProjectConfigurator().subprojects(getSubprojects(referrer), configureAction);
     }
 
     @Override
@@ -1206,10 +1213,6 @@ public abstract class DefaultProject extends AbstractPluginAware implements Proj
         return services.get(ServiceRegistryFactory.class);
     }
 
-    @Inject
-    @Override
-    public abstract DependencyMetaDataProvider getDependencyMetaDataProvider();
-
     @Override
     public AntBuilder ant(Closure configureClosure) {
         return ConfigureUtil.configure(configureClosure, getAnt());
@@ -1478,19 +1481,28 @@ public abstract class DefaultProject extends AbstractPluginAware implements Proj
     public DetachedResolver newDetachedResolver() {
         DependencyManagementServices dms = getServices().get(DependencyManagementServices.class);
         InstantiatorFactory instantiatorFactory = services.get(InstantiatorFactory.class);
-        DefaultServiceRegistry lookup = new DefaultServiceRegistry(services);
-        lookup.addProvider(new ServiceRegistrationProvider() {
-            @Provides
-            public DependencyResolutionServices createServices() {
-                return dms.create(
-                    services.get(FileResolver.class),
-                    services.get(FileCollectionFactory.class),
-                    services.get(DependencyMetaDataProvider.class),
-                    new UnknownProjectFinder("Detached resolvers do not support resolving projects"),
-                    new DetachedDependencyResolutionDomainObjectContext(services.get(DomainObjectContext.class))
-                );
-            }
-        });
+        CloseableServiceRegistry lookup = ServiceRegistryBuilder.builder()
+            .displayName("detached resolver services")
+            .parent(services)
+            .provider(new ServiceRegistrationProvider() {
+                @Provides
+                public DependencyResolutionServices createDependencyResolutionServices(
+                    FileResolver fileResolver,
+                    FileCollectionFactory fileCollectionFactory,
+                    DependencyMetaDataProvider dependencyMetaDataProvider,
+                    DomainObjectContext domainObjectContext
+                ) {
+                    return dms.create(
+                        fileResolver,
+                        fileCollectionFactory,
+                        dependencyMetaDataProvider,
+                        new UnknownProjectFinder("Detached resolvers do not support resolving projects"),
+                        new DetachedDependencyResolutionDomainObjectContext(domainObjectContext)
+                    );
+                }
+            })
+            .build();
+
         return instantiatorFactory.decorate(lookup).newInstance(
             LocalDetachedResolver.class
         );
@@ -1547,6 +1559,12 @@ public abstract class DefaultProject extends AbstractPluginAware implements Proj
         @Nullable
         public ProjectInternal getProject() {
             return delegate.getProject();
+        }
+
+        @Nullable
+        @Override
+        public Path getProjectIdentityPath() {
+            return delegate.getProjectIdentityPath();
         }
 
         @Override
